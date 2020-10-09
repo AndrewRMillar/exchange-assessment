@@ -16,20 +16,25 @@ cd docker
 docker-compose up
 ```
 
-### Installing dependencies
+### Seeding the database
 
-Run composer install inside the docker container with the following command to install all the project dependencies.
+To load the seed data in our database, in another terminal navigate to the docker folder and run the following command:
+
+```
+cd php-assessment/docker/
+
+docker-compose run php-fpm bin/console doctrine:fixtures:load
+```
+
+If you visit localhost you should now see a table with currency codes!
+
+
+### Using composer
+
+If you want to use composer to install packages you can run it with the following command (also from within the docker directory).
 
 ```
 docker-compose run php-fpm composer 
-```
-
-### Seeding the database
-
-To load the seed data in our database run the following command:
-
-```
-docker-compose run php-fpm bin/console doctrine:fixtures:load
 ```
 
 
