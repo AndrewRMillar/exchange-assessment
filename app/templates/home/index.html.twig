@@ -1,0 +1,17 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+    <h1>Currencies</h1>
+    <table>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+        </tr>
+        {% for currency in currencies %}
+            <tr>
+                <td>{{currency.code}}</td>
+                <td>{{currency.name}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}
