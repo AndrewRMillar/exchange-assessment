@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\ExchangeRate;
 use App\Repository\CurrencyRepository;
+use App\Repository\ExchangeRateRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,9 +45,9 @@ class ExchangeController extends AbstractController
 
 
     /**
-     * @Route("/exchange", name="exchange")
      * @param CurrencyRepository $repo
      * @return Response
+     * @Route("/exchange", name="exchange")
      */
     public function index(CurrencyRepository $repo): Response
     {
@@ -96,6 +97,7 @@ class ExchangeController extends AbstractController
      */
     private function getRates(): array
     {
+        $exchangeRate = $this->getDBRate('USD');
         $exchangeRateUrl = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml';
         $ratesUpdateTime = '14:15';
 
@@ -121,7 +123,29 @@ class ExchangeController extends AbstractController
         $this->setTime(strtotime($array['Cube']['Cube']['@attributes']['time'] . ' ' . $ratesUpdateTime));
 
         $this->flattenExchangeRateArray($array['Cube']['Cube']['Cube']);
+
         return $this->currencyExchangeRateArray;
+    }
+
+
+    /**
+     * Get the exchange rates from the db,
+     * @param $code
+     * @return object
+     */
+    private function getDBRate($code): object
+    {
+        $exchangeArray = $this->getDoctrine()
+                ->getRepository(ExchangeRate::class)
+                ->findBy(['code' => $code]);
+        $time = 0;
+        $return = null;
+        foreach ($exchangeArray as $exchangeRate) {
+            if ($exchangeRate->getTime() > $time) {
+                $return = $exchangeRate;
+            }
+        }
+        return $return;
     }
 
     
@@ -141,8 +165,18 @@ class ExchangeController extends AbstractController
 
 
     /**
+     * Function to return if the time of day is before or after the update time
+     * @return bool
+     */
+    private function beforeUpdate(): bool
+    {
+        return intval(date('G')) > 14 && intval(date('i')) > 15;
+    }
+
+
+    /**
      * Function to retrieve the exchange rate for a given currency.
-     * Check the time stamp. If the time is after 14:15 it is
+     * Check the time stamp. If the time is after 14:15 the data on the site should have been renewed
      *
      * @param $currencyCode
      */
@@ -152,46 +186,54 @@ class ExchangeController extends AbstractController
         $timestamp = $this->getTime();
 
         // Check if the data on the website should have been updated
-        if (intval(date('G')) > 14 && intval(date('i')) > 15) {
+        if ($this->beforeUpdate()) {
             $upToDate = intval(date('j', $timestamp)) > intval(date('j'));
         }
         // We should have
         else {
 
         }
-        $sql = "SELECT DATE_FORMAT(whatever.createdAt, '%Y-%m-%d') FORM whatever...";
-        $em = $this->getDoctrine()->getManager();
-        $em->getConnection()->exec($sql);
     }
 
 
     /**
+     * Get the most up te date exchangerate for a single currency
      * @param string $currency
      * @return mixed
      */
     private function getExchangeRate(string $currency)
     {
         $this->getRates();
+        $DBRate = $this->getDBRate($currency);
+        // check the time in the db
+        $dbTime = $DBRate->getTime();
+        $removeDay = $this->beforeUpdate()? 1: 0;
+        if (date('Yj', $dbTime) > (date('Yj') - $removeDay)) {
+            return $DBRate->getRate();
+        }
+        $this->putExchangeRates();
         return floatval($this->currencyExchangeRateArray[$currency]);
     }
 
 
     /**
      * Get the exchange rates from the website and put them in the database with the timestamp of the data
-     * This function should be performed one a day after 14:15, the update time of the exchange rate data
+     * This function should be called in a cron once a day after 14:15; the update time of the exchange rate data
+     *
+     * @Route("/getexchangerates", name="")
      */
     public function putExchangeRates(): void
     {
         $this->getRates();
-        $entityManager = $this->getDoctrine()->getManager();
         $ratesArray = $this->currencyExchangeRateArray;
+        $entityManager = $this->getDoctrine()->getManager();
         foreach($ratesArray as $code => $rate) {
             $exchangeRate = new ExchangeRate();
             $exchangeRate->setCode($code);
             $exchangeRate->setRate($rate);
             $exchangeRate->setTime($this->time);
             $entityManager->persist($exchangeRate);
+            $entityManager->flush();
         }
-        $entityManager->flush();
     }
 }
