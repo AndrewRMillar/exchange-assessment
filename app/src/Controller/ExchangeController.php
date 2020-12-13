@@ -97,7 +97,7 @@ class ExchangeController extends AbstractController
      */
     private function getRates(): array
     {
-        $exchangeRate = $this->getDBRate('USD');
+        // TODO find out where to best make these constants
         $exchangeRateUrl = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml';
         $ratesUpdateTime = '14:15';
 
@@ -121,7 +121,7 @@ class ExchangeController extends AbstractController
 
         // Set a time-stamp for the latest version
         $this->setTime(strtotime($array['Cube']['Cube']['@attributes']['time'] . ' ' . $ratesUpdateTime));
-
+        
         $this->flattenExchangeRateArray($array['Cube']['Cube']['Cube']);
 
         return $this->currencyExchangeRateArray;
