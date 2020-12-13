@@ -121,7 +121,7 @@ class ExchangeController extends AbstractController
 
         // Set a time-stamp for the latest version
         $this->setTime(strtotime($array['Cube']['Cube']['@attributes']['time'] . ' ' . $ratesUpdateTime));
-        
+
         $this->flattenExchangeRateArray($array['Cube']['Cube']['Cube']);
 
         return $this->currencyExchangeRateArray;
