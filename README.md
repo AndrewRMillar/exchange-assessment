@@ -6,7 +6,8 @@ If you do not have a Docker installation, please go to https://docs.docker.com/c
 instructions to install the docker toolbox!
 
 To get started, fork this repositories to your own Github account. Then, download the repository. Navigate in to the 
-folder and launch the docker containers using the following commands.
+folder and launch the docker containers using the following commands. After first changeing the requirements for the 
+php version from `php:fpm-alpine` to `php:7.4-fpm-alpine`.
 
 ```
 cd path/to/php-assessment
@@ -14,6 +15,16 @@ cd path/to/php-assessment
 cd docker
 
 docker-compose up
+```
+
+### Dependencies and Migrations
+
+Then install the requires dependencies and create the database tables by using the following commands
+
+```
+$ docker-compose run php-fpm composer update
+
+$ docker-compose run php-fpm bin/console doctrine:migrations:migrate
 ```
 
 ### Seeding the database
