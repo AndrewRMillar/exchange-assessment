@@ -17,17 +17,17 @@ class ExchangeController extends AbstractController
     /**
      * @var false|int
      */
-    private $time;
+    private $xmlTime;
 
 
     /**
-     * Set the time for the online rates data
+     * Set the time for the online rates data from the xml
      *
-     * @param $time
+     * @param $xmlTime
      */
-    public function setTime($time): void
+    public function setXmlTime($xmlTime): void
     {
-        $this->time = $time;
+        $this->xmlTime = $xmlTime;
     }
 
 
@@ -36,9 +36,9 @@ class ExchangeController extends AbstractController
      *
      * @return false|int
      */
-    public function getTime()
+    public function getXmlTime()
     {
-        return $this->time;
+        return $this->xmlTime;
     }
 
 
@@ -118,7 +118,7 @@ class ExchangeController extends AbstractController
         $array = json_decode($json, TRUE);
 
         // Set a time-stamp for the latest version
-        $this->setTime(strtotime($array['Cube']['Cube']['@attributes']['time'] . ' ' . $ratesUpdateTime));
+        $this->setXmlTime(strtotime($array['Cube']['Cube']['@attributes']['time'] . ' ' . $ratesUpdateTime));
 
         $this->flattenExchangeRateArray($array['Cube']['Cube']['Cube']);
 
@@ -208,7 +208,7 @@ class ExchangeController extends AbstractController
             $exchangeRate = new ExchangeRate();
             $exchangeRate->setCode($code);
             $exchangeRate->setRate($rate);
-            $exchangeRate->setTime($this->time);
+            $exchangeRate->setTime($this->xmlTime);
             $entityManager->persist($exchangeRate);
             $entityManager->flush();
         }
