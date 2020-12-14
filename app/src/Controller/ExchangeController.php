@@ -138,11 +138,12 @@ class ExchangeController extends AbstractController
         $exchangeArray = $this->getDoctrine()
                 ->getRepository(ExchangeRate::class)
                 ->findBy(['code' => $code]);
-        $time = 0;
+        $DBTime = 0;
         $return = null;
         foreach ($exchangeArray as $exchangeRate) {
-            if ($exchangeRate->getTime() > $time) {
+            if ($exchangeRate->getTime() > $DBTime) {
                 $return = $exchangeRate;
+                $DBTime = $exchangeRate->getTime();
             }
         }
         return $return;
