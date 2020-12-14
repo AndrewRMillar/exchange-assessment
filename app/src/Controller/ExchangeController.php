@@ -17,10 +17,9 @@ class ExchangeController extends AbstractController
      */
     private $currencyExchangeRateArray;
     /**
-     * @var false|int
+     * @var int
      */
     private $xmlTime;
-
     /**
      * @var int
      */
@@ -45,9 +44,9 @@ class ExchangeController extends AbstractController
     /**
      * Get the time for the online rates data
      *
-     * @return false|int
+     * @return int
      */
-    public function getXmlTime()
+    public function getXmlTime(): int
     {
         return $this->xmlTime;
     }
@@ -213,12 +212,13 @@ class ExchangeController extends AbstractController
     {
         $this->getRates();
         $DBRate = $this->getDBRate($currency);
-        // check the time in the db
-        $dbTime = $DBRate->getTime();
+        $dbTime = $this->getDBTime();
         $removeDay = $this->beforeUpdate()? 1: 0;
-        if (date('Yj', $dbTime) > (date('Yj') - $removeDay)) {
+        // If the db timestamp is bigger that the xml timestamp use it
+        if ($dbTime >= $this->getXmlTime()) {
             return $DBRate->getRate();
         }
+        // xml data is newer, put it in the db
         $this->putExchangeRates();
         return floatval($this->currencyExchangeRateArray[$currency]);
     }
