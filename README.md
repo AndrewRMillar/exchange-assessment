@@ -6,8 +6,8 @@ If you do not have a Docker installation, please go to https://docs.docker.com/c
 instructions to install the docker toolbox!
 
 To get started, fork this repositories to your own Github account. Then, download the repository. Navigate in to the 
-folder and launch the docker containers using the following commands. After first changeing the requirements for the 
-php version from `php:fpm-alpine` to `php:7.4-fpm-alpine`.
+folder and launch the docker containers using the following commands. First make shure the requirements for the 
+php version are 7.4 and not for the newest php version; `php:7.4-fpm-alpine` in stead of `php:fpm-alpine`.
 
 ```
 cd path/to/php-assessment
