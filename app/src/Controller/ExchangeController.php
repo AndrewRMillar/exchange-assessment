@@ -4,11 +4,9 @@ namespace App\Controller;
 
 use App\Entity\ExchangeRate;
 use App\Repository\CurrencyRepository;
-use App\Repository\ExchangeRateRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 
 class ExchangeController extends AbstractController
 {
@@ -172,28 +170,6 @@ class ExchangeController extends AbstractController
     private function beforeUpdate(): bool
     {
         return intval(date('G')) > 14 && intval(date('i')) > 15;
-    }
-
-
-    /**
-     * Function to retrieve the exchange rate for a given currency.
-     * Check the time stamp. If the time is after 14:15 the data on the site should have been renewed
-     *
-     * @param $currencyCode
-     */
-    private function getCurrentExchangeRate($currencyCode)
-    {
-        $exchangeRates = $this->getRates();
-        $timestamp = $this->getTime();
-
-        // Check if the data on the website should have been updated
-        if ($this->beforeUpdate()) {
-            $upToDate = intval(date('j', $timestamp)) > intval(date('j'));
-        }
-        // We should have
-        else {
-
-        }
     }
 
 
