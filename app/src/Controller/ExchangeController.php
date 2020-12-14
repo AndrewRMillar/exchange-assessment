@@ -4,9 +4,11 @@ namespace App\Controller;
 
 use App\Entity\ExchangeRate;
 use App\Repository\CurrencyRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 
 class ExchangeController extends AbstractController
 {
@@ -18,6 +20,15 @@ class ExchangeController extends AbstractController
      * @var false|int
      */
     private $xmlTime;
+
+    /**
+     * @var int
+     */
+    private $DBTime;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
 
     /**
@@ -41,14 +52,32 @@ class ExchangeController extends AbstractController
         return $this->xmlTime;
     }
 
+    /**
+     * @param $time
+     */
+    private function setDBTime($time)
+    {
+        $this->DBTime = $time;
+    }
+
+    /**
+     * @return int
+     */
+    private function getDBTime(): int
+    {
+        return $this->DBTime;
+    }
+
+
 
     /**
      * @param CurrencyRepository $repo
      * @return Response
      * @Route("/exchange", name="exchange")
      */
-    public function index(CurrencyRepository $repo): Response
+    public function index(CurrencyRepository $repo, LoggerInterface $logger): Response
     {
+        $this->logger = $logger;
         $currencies = $repo->findAll();
         $codes = [];
         foreach($currencies as $currency) {
@@ -84,6 +113,7 @@ class ExchangeController extends AbstractController
             'dest' => $currencyDest,
             'amount' => $amount,
             'result' => $converted,
+            'datetime' => $this->getDBTime(),
         ]);
     }
 
@@ -109,9 +139,9 @@ class ExchangeController extends AbstractController
 
         if (curl_error($ch)) {
             // write error to log
-            // $logger = new ConsoleLogger; // TODO: find out how this works
-            // $logger->ERROR('Curl failed to retrieve the data from ' . $exchangeRateUrl);
+            $this->logger->critical('Curl error: %error', ['%error' => curl_error($ch)]);
             print 'Curl failed to retrieve the data from ' . $exchangeRateUrl;
+            print 'Error message: ' . curl_error($ch);
         }
         $xml = simplexml_load_string($str_xml);
         $json = json_encode($xml);
@@ -144,6 +174,7 @@ class ExchangeController extends AbstractController
                 $DBTime = $exchangeRate->getTime();
             }
         }
+        $this->setDBTime($return->getTime());
         return $return;
     }
 
@@ -213,4 +244,5 @@ class ExchangeController extends AbstractController
             $entityManager->flush();
         }
     }
+
 }
